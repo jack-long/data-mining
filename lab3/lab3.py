@@ -46,14 +46,14 @@ def get_wedges(edge, edges):
     for each in edges:
         wedge = []
         if edge[0] == each[0]:
-            wedge = sorted([each[1], edge[1]])
+            wedge = [each[1], edge[1]] if int(each[1]) < int(edge[1]) else [edge[1], each[1]]
             wedge.append(edge[0])
         if edge[0] == each[1]:
             wedge = [each[0], edge[1], edge[0]]
         if edge[1] == each[0]:
             wedge = [edge[0], each[1], each[0]]
         if edge[1] == each[1]:
-            wedge = sorted([each[0], edge[0]])
+            wedge = [each[0], edge[0]] if int(each[0]) < int(edge[0]) else [edge[0], each[0]]
             wedge.append(edge[1])
         new_wedges.append(wedge)
     print "new wedge", new_wedges
@@ -81,11 +81,11 @@ with open("data/ego-facebook") as f:
     stream = f.readlines()
     for n, line in enumerate(stream[:100]):
         u, v = line.strip().split()
-        edge = sorted([u, v])
+        edge = [u, v] if int(u) < int(v) else [v, u]
         if keep(n+1, edges_size):
             check_close(edge, wedges, is_closed)
-            insert_edge(edge, edges)
             new_wedges = get_wedges(edge, edges)
+            insert_edge(edge, edges)
             update_wedges(new_wedges, wedges)
 
     # print calculate_triangle(len(stream))
