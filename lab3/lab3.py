@@ -5,7 +5,7 @@ edges_size = 100
 wedges_size = 100
 
 edges = []
-wedges = []
+wedges = [None] * wedges_size
 
 is_closed = [False] * wedges_size
 
@@ -55,13 +55,16 @@ def get_wedges(edge, edges):
         if edge[1] == each[1]:
             wedge = [each[0], edge[0]] if int(each[0]) < int(edge[0]) else [edge[0], each[0]]
             wedge.append(edge[1])
-        new_wedges.append(wedge)
-    print "new wedge", new_wedges
+        if wedge:
+            new_wedges.append(wedge)
+    # print "new wedge", new_wedges
     return new_wedges
 
 
 def check_close(edge, wedges, is_closed):
     for index, wedge in enumerate(wedges):
+        if wedge is None:
+            continue
         if edge == wedge[:2]:
             is_closed[index] = True
             print wedge[0] + '-' + wedge[2], wedge[1] + '-' + wedge[2]
@@ -69,27 +72,31 @@ def check_close(edge, wedges, is_closed):
 
 def update_wedges(new_wedges, wedges):
     current_wedges = total_wedges(edges)
-    for index, _ in wedges:
-        if random.randint(current_wedges) < len(new_wedges):
+    for index in range(wedges_size):
+        if random.randint(0, current_wedges) < len(new_wedges):
             choice = random.randint(1, len(new_wedges))
-            wedge = wedges[choice - 1]
+            wedge = new_wedges[choice - 1]
             wedges[index] = wedge
+            if not wedge:
+                print "update", wedge, new_wedges
             is_closed[index] = False
 
 
 with open("data/ego-facebook") as f:
     stream = f.readlines()
-    for n, line in enumerate(stream[:100]):
+    for n, line in enumerate(stream):
         u, v = line.strip().split()
         edge = [u, v] if int(u) < int(v) else [v, u]
         if keep(n+1, edges_size):
             check_close(edge, wedges, is_closed)
             new_wedges = get_wedges(edge, edges)
             insert_edge(edge, edges)
-            update_wedges(new_wedges, wedges)
+            if new_wedges:
+                update_wedges(new_wedges, wedges)
 
     # print calculate_triangle(len(stream))
     print "edges", edges
     print "wedges", wedges
+    print "is_closed", is_closed
 
 
