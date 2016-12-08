@@ -94,7 +94,7 @@ class SpectralClustering:
 
 
 def main():
-    spectral = SpectralClustering("data/com-amazon", 1000, 1000)  # com-amazon  ego-facebook
+    spectral = SpectralClustering("data/ego-facebook", 100, 100)  # com-amazon  ego-facebook
     spectral.cluster()
 
 
