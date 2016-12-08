@@ -29,18 +29,13 @@ class StreamSampling:
         p = closed / float(self.wedges_size)
         return (p * t * t / self.edges_size / (self.edges_size-1)) * self.total_wedges()
 
-    # def keep(self, n):
-    #     """Prop
-    #     """
-    #     return random.randint(0, n) < self.edges_size
-
     def insert_edge(self, edge, t):
-        """Insert a new edge into reservoir samples with probability s/t
+        """Replacing each entry by edge with probability 1/t
         """
         self.edges_updated = False
         if self.edges_filled:
             for i in range(self.edges_size):
-                if random.randint(0, t) <= 1:
+                if random.randint(1, t) == 1:
                     self.edges[i] = edge
                     self.edges_updated = True
         else:
@@ -50,26 +45,31 @@ class StreamSampling:
             self.edges_updated = True
 
     def get_wedges(self, edge):
-        """new edges involving new edge e_t
+        """new wedges involving new edge formed only by edges in self.edges
         """
         new_wedges = []
         for each in self.edges:
             if edge == each:
                 continue
-            wedge = []
+
             if edge[0] == each[0]:
                 wedge = [each[1], edge[1]] if int(each[1]) < int(edge[1]) else [edge[1], each[1]]
                 wedge.append(edge[0])
-            if edge[0] == each[1]:
+                new_wedges.append(wedge)
+
+            elif edge[0] == each[1]:
                 wedge = [each[0], edge[1], edge[0]]
-            if edge[1] == each[0]:
+                new_wedges.append(wedge)
+
+            elif edge[1] == each[0]:
                 wedge = [edge[0], each[1], each[0]]
-            if edge[1] == each[1]:
+                new_wedges.append(wedge)
+
+            elif edge[1] == each[1]:
                 wedge = [each[0], edge[0]] if int(each[0]) < int(edge[0]) else [edge[0], each[0]]
                 wedge.append(edge[1])
-            if wedge:
                 new_wedges.append(wedge)
-        # print "new wedge", new_wedges
+
         return new_wedges
 
     def check_close(self, edge):
@@ -81,18 +81,17 @@ class StreamSampling:
                     self.is_closed[index] = True
                     print wedge[0] + '-' + wedge[2], wedge[1] + '-' + wedge[2]
             except TypeError:
-                # if wedge is None
+                # If wedge is None, as init value for each entry is None
                 continue
 
-    def update_wedges(self, new_wedges, wedges):
+    def update_wedges(self, new_wedges):
         """Insert new wedge into wedges reservoir
         """
-        current_wedges = self.total_wedges()
-        for index in range(self.wedges_size):
-            if random.randint(0, current_wedges) < len(new_wedges):
-                choice = random.randint(1, len(new_wedges))
-                wedge = new_wedges[choice - 1]
-                wedges[index] = wedge
+        total_wedges_count = self.total_wedges()
+        new_wedges_count = len(new_wedges)
+        for index in xrange(self.wedges_size):
+            if random.randint(1, total_wedges_count) <= new_wedges_count:
+                self.wedges[index] = random.choice(new_wedges)
                 self.is_closed[index] = False
 
     def sampling(self):
@@ -100,16 +99,15 @@ class StreamSampling:
         """
         with open(self.source) as f:
             stream = f.readlines()
-            for n, line in enumerate(stream):
+            for t, line in enumerate(stream):
                 u, v = line.strip().split()
                 edge = [u, v] if int(u) < int(v) else [v, u]
                 self.check_close(edge)
-                self.insert_edge(edge, n)
+                self.insert_edge(edge, t)
                 if self.edges_updated:
                     new_wedges = self.get_wedges(edge)
                     if new_wedges:
-                        self.update_wedges(new_wedges, self.wedges)
-                # self.calculate_triangle(n)
+                        self.update_wedges(new_wedges)
             print "edges", self.edges
             print "wedges", self.wedges
             print "is_closed", self.is_closed
