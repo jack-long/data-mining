@@ -25,8 +25,8 @@ def total_wedges(edges):
 
 
 def calculate_triangle(t):
-    p = is_closed.count(True)
-    return [p * t * t / edges_size * (edges_size-1)] * total_wedges(edges)
+    p = is_closed.count(True) / float(len(is_closed))
+    return (p * t * t / edges_size / (edges_size-1)) * total_wedges(edges)
 
 
 def keep(n, edges_size):
@@ -68,6 +68,7 @@ def check_close(edge, wedges, is_closed):
         if edge == wedge[:2]:
             is_closed[index] = True
             print wedge[0] + '-' + wedge[2], wedge[1] + '-' + wedge[2]
+            # print is_closed.count(True)
 
 
 def update_wedges(new_wedges, wedges):
@@ -94,9 +95,8 @@ with open("data/ego-facebook") as f:
             if new_wedges:
                 update_wedges(new_wedges, wedges)
 
-    # print calculate_triangle(len(stream))
     print "edges", edges
     print "wedges", wedges
     print "is_closed", is_closed
-
-
+    print is_closed.count(True)
+    print "triangle estimate", calculate_triangle(len(stream))
